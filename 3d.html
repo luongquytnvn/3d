@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Photo Cube</title>
+    <style>
+        body {
+            background-color: #121212; /* Màu nền tối để ảnh nổi bật */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+            font-family: sans-serif;
+        }
+
+        /* Vùng chứa không gian 3D */
+        .scene {
+            width: 300px;
+            height: 300px;
+            perspective: 1000px; /* Tạo độ sâu hút mắt */
+        }
+
+        /* Khối lập phương */
+        .cube {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transform-style: preserve-3d; /* Quan trọng: Giữ không gian 3D cho các mặt con */
+            transform: rotateX(-30deg) rotateY(-45deg); /* Góc nhìn ban đầu */
+            animation: rotateCube 12s infinite linear; /* Tự động xoay */
+            transition: transform 1s;
+        }
+
+        /* Các mặt của khối */
+        .cube__face {
+            position: absolute;
+            width: 300px;
+            height: 300px;
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            box-sizing: border-box;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.2); /* Hiệu ứng phát sáng nhẹ */
+            transition: all 0.5s ease; /* Hiệu ứng mượt khi hover */
+            backface-visibility: hidden; /* Che mặt sau của ảnh nếu cần, ở đây ta để hiện để nhìn xuyên thấu */
+            backface-visibility: visible;
+            opacity: 0.9;
+        }
+
+        .cube__face img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover; /* Đảm bảo ảnh không bị méo */
+        }
+
+        /* Định vị vị trí 6 mặt trong không gian 3D */
+        /* TranslateZ = 1 nửa kích thước khối (300px / 2 = 150px) */
+        
+        .face--front  { transform: rotateY(0deg) translateZ(150px); }
+        .face--right  { transform: rotateY(90deg) translateZ(150px); }
+        .face--back   { transform: rotateY(180deg) translateZ(150px); }
+        .face--left   { transform: rotateY(-90deg) translateZ(150px); }
+        .face--top    { transform: rotateX(90deg) translateZ(150px); }
+        .face--bottom { transform: rotateX(-90deg) translateZ(150px); }
+
+        /* Animation xoay tự động */
+        @keyframes rotateCube {
+            0%   { transform: rotateX(-20deg) rotateY(0deg); }
+            100% { transform: rotateX(-20deg) rotateY(360deg); }
+        }
+
+        /* HIỆU ỨNG TƯƠNG TÁC NGƯỜI DÙNG */
+        
+        /* Khi di chuột vào scene, tạm dừng xoay */
+        .scene:hover .cube {
+            animation-play-state: paused;
+        }
+
+        /* Hiệu ứng "Bùng nổ" (Explode) khi hover */
+        /* Đẩy các mặt ra xa tâm hơn 1 chút (từ 150px lên 200px) */
+        .scene:hover .face--front  { transform: rotateY(0deg) translateZ(220px); }
+        .scene:hover .face--right  { transform: rotateY(90deg) translateZ(220px); }
+        .scene:hover .face--back   { transform: rotateY(180deg) translateZ(220px); }
+        .scene:hover .face--left   { transform: rotateY(-90deg) translateZ(220px); }
+        .scene:hover .face--top    { transform: rotateX(90deg) translateZ(220px); }
+        .scene:hover .face--bottom { transform: rotateX(-90deg) translateZ(220px); }
+
+        /* Style cho các mặt */
+        .cube__face {
+            color: white;
+            font-size: 20px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="scene">
+        <div class="cube" id="cube">
+            <div class="cube__face face--front">
+                <img src="https://images.unsplash.com/photo-1517849845537-4d257902454a?w=500&auto=format&fit=crop&q=60" alt="1">
+            </div>
+            <div class="cube__face face--back">
+                <img src="https://images.unsplash.com/photo-1550258987-190a2d41a8ba?w=500&auto=format&fit=crop&q=60" alt="2">
+            </div>
+            <div class="cube__face face--right">
+                <img src="https://images.unsplash.com/photo-1542831371-29b0f74f9713?w=500&auto=format&fit=crop&q=60" alt="3">
+            </div>
+            <div class="cube__face face--left">
+                <img src="https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=500&auto=format&fit=crop&q=60" alt="4">
+            </div>
+            <div class="cube__face face--top">
+                <img src="https://images.unsplash.com/photo-1504639725590-34d0984388bd?w=500&auto=format&fit=crop&q=60" alt="5">
+            </div>
+            <div class="cube__face face--bottom">
+                <img src="https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=500&auto=format&fit=crop&q=60" alt="6">
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // JAVASCRIPT: Thêm tính năng dùng chuột kéo để xoay khối (Optional)
+        // Nếu không cần kéo chuột, bạn có thể xóa đoạn script này
+        
+        const scene = document.querySelector('.scene');
+        const cube = document.querySelector('.cube');
+        let isDragging = false;
+        let previousMouseX = 0;
+        let previousMouseY = 0;
+        let rotationX = -20;
+        let rotationY = 0;
+
+        // Khi nhấn chuột xuống
+        scene.addEventListener('mousedown', (e) => {
+            isDragging = true;
+            previousMouseX = e.clientX;
+            previousMouseY = e.clientY;
+            cube.style.animation = 'none'; // Tắt animation tự động khi user can thiệp
+        });
+
+        // Khi nhả chuột
+        document.addEventListener('mouseup', () => {
+            isDragging = false;
+            // Nếu muốn tự động xoay lại sau khi thả chuột, uncomment dòng dưới:
+            // cube.style.animation = 'rotateCube 12s infinite linear'; 
+        });
+
+        // Khi di chuyển chuột
+        document.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+
+            const deltaX = e.clientX - previousMouseX;
+            const deltaY = e.clientY - previousMouseY;
+
+            rotationY += deltaX * 0.5;
+            rotationX -= deltaY * 0.5;
+
+            cube.style.transform = `rotateX(${rotationX}deg) rotateY(${rotationY}deg)`;
+
+            previousMouseX = e.clientX;
+            previousMouseY = e.clientY;
+        });
+
+        // Hỗ trợ cảm ứng trên điện thoại (Touch events)
+        scene.addEventListener('touchstart', (e) => {
+            isDragging = true;
+            previousMouseX = e.touches[0].clientX;
+            previousMouseY = e.touches[0].clientY;
+            cube.style.animation = 'none';
+        });
+
+        document.addEventListener('touchmove', (e) => {
+            if (!isDragging) return;
+            const deltaX = e.touches[0].clientX - previousMouseX;
+            const deltaY = e.touches[0].clientY - previousMouseY;
+            rotationY += deltaX * 0.5;
+            rotationX -= deltaY * 0.5;
+            cube.style.transform = `rotateX(${rotationX}deg) rotateY(${rotationY}deg)`;
+            previousMouseX = e.touches[0].clientX;
+            previousMouseY = e.touches[0].clientY;
+        });
+        
+        document.addEventListener('touchend', () => {
+            isDragging = false;
+        });
+    </script>
+</body>
+</html>
